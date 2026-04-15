@@ -74,6 +74,7 @@ def test_match_rule_returns_none_when_nothing_matches() -> None:
     assert matched is None
 
 
+
 def test_render_destination_replaces_date_placeholders() -> None:
     message = MailMessage(
         source_id="msg-3",
