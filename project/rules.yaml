@@ -1,0 +1,84 @@
+rules:
+  - name: metro_csv_documents
+    priority: 10
+    enabled: true
+    sender_contains:
+      - "deilmann.sro@gmail.com"
+    subject_contains:
+      - "dodaci list"
+    filename_contains:
+      - "inv_"
+    allowed_extensions:
+      - ".csv"
+    destination: "Mail/Documents/Metro/{yyyy}/{mm}"
+
+  - name: insurance_pdfs
+    priority: 20
+    enabled: true
+    sender_contains:
+      - "deilmann.sro@gmail.com"
+    subject_contains:
+      - "poistnej zmluve"
+      - "poistenia"
+    filename_contains: []
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Documents/Insurance/{yyyy}/{mm}"
+
+  - name: websupport_invoices
+    priority: 30
+    enabled: true
+    sender_contains:
+      - "deilmann.sro@gmail.com"
+    subject_contains:
+      - "faktúra"
+      - "faktura"
+      - "websupport"
+    filename_contains: []
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Documents/Websupport/{yyyy}/{mm}"
+
+  - name: bank_xml_exports
+    priority: 40
+    enabled: true
+    sender_contains:
+      - "deilmann.sro@gmail.com"
+    subject_contains:
+      - "pravidelný export z účtu"
+      - "pravidelny export z uctu"
+    filename_contains:
+      - "export_"
+    allowed_extensions:
+      - ".xml"
+    destination: "Mail/Bank/Exports/{yyyy}/{mm}"
+
+  - name: bank_pdf_statements
+    priority: 50
+    enabled: true
+    sender_contains:
+      - "deilmann.sro@gmail.com"
+    subject_contains:
+      - "pravidelný výpis k účtu"
+      - "pravidelny vypis k uctu"
+    filename_contains:
+      - "report_"
+      - "vypis"
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Bank/Statements/{yyyy}/{mm}"
+
+  - name: forwarded_bills_gmail
+    priority: 60
+    enabled: true
+    sender_contains:
+      - "rednaxela1813@gmail.com"
+    subject_contains:
+      - "bill for"
+    filename_contains: []
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Bills/Forwarded/{yyyy}/{mm}"
+
+fallback:
+  destination: "Mail/Unsorted/{yyyy}/{mm}"
