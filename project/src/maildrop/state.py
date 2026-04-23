@@ -34,6 +34,14 @@ class StateStore:
                 )
                 """
             )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS sender_last_seen (
+                    sender TEXT PRIMARY KEY,
+                    last_seen_at TEXT NOT NULL
+                )
+                """
+            )
             connection.commit()
 
     def is_message_processed(self, source_id: str) -> bool:
@@ -107,3 +115,27 @@ class StateStore:
                 ),
             )
             connection.commit()
+
+    def record_sender_seen(self, sender: str, last_seen_at: str) -> None:
+        with sqlite3.connect(self.db_path) as connection:
+            connection.execute(
+                """
+                INSERT INTO sender_last_seen (sender, last_seen_at)
+                VALUES (?, ?)
+                ON CONFLICT(sender) DO UPDATE SET last_seen_at = excluded.last_seen_at
+                """,
+                (sender, last_seen_at),
+            )
+            connection.commit()
+
+    def list_sender_last_seen(self) -> list[tuple[str, str]]:
+        with sqlite3.connect(self.db_path) as connection:
+            cursor = connection.execute(
+                """
+                SELECT sender, last_seen_at
+                FROM sender_last_seen
+                ORDER BY sender ASC
+                """
+            )
+            rows = cursor.fetchall()
+            return [(row[0], row[1]) for row in rows]

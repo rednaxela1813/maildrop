@@ -3,6 +3,7 @@ from __future__ import annotations
 import typer
 
 from maildrop.config import get_settings
+from maildrop.health import check_sender_health
 from maildrop.imap_client import ImapClient
 from maildrop.scanner import run_scan
 
@@ -67,3 +68,42 @@ def debug_imap() -> None:
             typer.echo(
                 f"  - {attachment.filename} | {attachment.content_type} | {attachment.size} bytes"
             )
+
+
+@app.command("check-health")
+def check_health(
+    max_age_days: int = typer.Option(
+        7,
+        "--max-age-days",
+        help="Warn if a sender has not been seen for more than this number of days.",
+    ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Exit with code 1 if any monitored sender is stale.",
+    ),
+) -> None:
+    """
+    Check sender freshness based on local state.
+    """
+    settings = get_settings()
+    results = check_sender_health(settings=settings, max_age_days=max_age_days)
+
+    if not results:
+        typer.echo("No sender history found yet.")
+        return
+
+    typer.echo(f"Checking sender freshness (threshold: {max_age_days} days)")
+    stale_found = False
+
+    for item in results:
+        status = "STALE" if item.is_stale else "OK"
+        typer.echo(
+            f"[{status}] {item.sender} | last seen: {item.last_seen_at.isoformat()} | "
+            f"age: {item.age_days} days"
+        )
+        if item.is_stale:
+            stale_found = True
+
+    if stale_found and strict:
+        raise typer.Exit(code=1)

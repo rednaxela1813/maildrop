@@ -60,6 +60,11 @@ def run_scan(settings: Settings, dry_run: bool = False) -> ScanResult:
         print(f"From: {message.sender}")
         print(f"Subject: {message.subject}")
         print(f"Attachments found: {len(message.attachments)}")
+        
+        state_store.record_sender_seen(
+            sender=message.sender,
+            last_seen_at=message.received_at.isoformat(),
+        )
 
         if state_store.is_message_processed(message.source_id):
             print(f"Message already processed locally: {message.source_id}")
