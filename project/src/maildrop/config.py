@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 PACKAGE_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_ENV_FILE = PACKAGE_ROOT / ".env"
 
@@ -25,6 +24,9 @@ class Settings(BaseSettings):
     log_level: str = Field("INFO", alias="LOG_LEVEL")
     allowed_extensions: str = Field(".pdf,.csv,.xml", alias="ALLOWED_EXTENSIONS")
     monitored_senders: str = Field("", alias="MONITORED_SENDERS")
+    sender_deilmann: str = Field("deilmann.sro@gmail.com", alias="MAILDROP_SENDER_DEILMANN")
+    sender_vub: str = Field("nonstopbanking@vub.sk", alias="MAILDROP_SENDER_VUB")
+    sender_forwarder: str = Field("rednaxela1813@gmail.com", alias="MAILDROP_SENDER_FORWARDER")
 
     model_config = SettingsConfigDict(
         env_file=DEFAULT_ENV_FILE,
@@ -50,6 +52,13 @@ class Settings(BaseSettings):
             for item in self.monitored_senders.split(",")
             if item.strip()
         ]
+
+    def rule_variables(self) -> dict[str, str]:
+        return {
+            "MAILDROP_SENDER_DEILMANN": self.sender_deilmann,
+            "MAILDROP_SENDER_VUB": self.sender_vub,
+            "MAILDROP_SENDER_FORWARDER": self.sender_forwarder,
+        }
 
     @staticmethod
     def _resolve_project_path(path: Path) -> Path:

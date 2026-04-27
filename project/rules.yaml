@@ -3,7 +3,7 @@ rules:
     priority: 10
     enabled: true
     sender_contains:
-      - "deilmann.sro@gmail.com"
+      - "${MAILDROP_SENDER_DEILMANN}"
     subject_contains:
       - "dodaci list"
     filename_contains:
@@ -16,7 +16,7 @@ rules:
     priority: 20
     enabled: true
     sender_contains:
-      - "deilmann.sro@gmail.com"
+      - "${MAILDROP_SENDER_DEILMANN}"
     subject_contains:
       - "poistnej zmluve"
       - "poistenia"
@@ -29,7 +29,7 @@ rules:
     priority: 30
     enabled: true
     sender_contains:
-      - "deilmann.sro@gmail.com"
+      - "${MAILDROP_SENDER_DEILMANN}"
     subject_contains:
       - "faktúra"
       - "faktura"
@@ -39,11 +39,23 @@ rules:
       - ".pdf"
     destination: "Mail/Documents/Websupport/{yyyy}/{mm}"
 
-  - name: bank_xml_exports
+  - name: vub_bank_xml_exports
     priority: 40
     enabled: true
     sender_contains:
-      - "deilmann.sro@gmail.com"
+      - "${MAILDROP_SENDER_VUB}"
+    subject_contains: []
+    filename_contains:
+      - "export_"
+    allowed_extensions:
+      - ".xml"
+    destination: "Mail/Bank/Exports/{yyyy}/{mm}"
+
+  - name: bank_xml_exports
+    priority: 45
+    enabled: true
+    sender_contains:
+      - "${MAILDROP_SENDER_DEILMANN}"
     subject_contains:
       - "pravidelný export z účtu"
       - "pravidelny export z uctu"
@@ -57,7 +69,7 @@ rules:
     priority: 50
     enabled: true
     sender_contains:
-      - "deilmann.sro@gmail.com"
+      - "${MAILDROP_SENDER_DEILMANN}"
     subject_contains:
       - "pravidelný výpis k účtu"
       - "pravidelny vypis k uctu"
@@ -72,7 +84,7 @@ rules:
     priority: 60
     enabled: true
     sender_contains:
-      - "rednaxela1813@gmail.com"
+      - "${MAILDROP_SENDER_FORWARDER}"
     subject_contains:
       - "bill for"
     filename_contains: []

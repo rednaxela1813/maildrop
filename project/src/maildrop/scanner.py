@@ -27,7 +27,7 @@ def run_scan(settings: Settings, dry_run: bool = False) -> ScanResult:
     state_store = StateStore(settings.sqlite_path)
     state_store.initialize()
 
-    rules, fallback = load_rules(settings.rules_file)
+    rules, fallback = load_rules(settings.rules_file, variables=settings.rule_variables())
 
     client = ImapClient(
         host=settings.imap_host,

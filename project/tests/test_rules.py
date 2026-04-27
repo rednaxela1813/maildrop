@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from maildrop.models import Attachment, MailMessage, RoutingRule
-from maildrop.rules import match_rule, render_destination
+from maildrop.rules import load_rules, match_rule, render_destination
 
 
 def test_match_rule_returns_matching_rule() -> None:
@@ -73,6 +73,69 @@ def test_match_rule_returns_none_when_nothing_matches() -> None:
 
     assert matched is None
 
+
+def test_project_rules_match_vub_xml_exports_without_subject_dependency() -> None:
+    message = MailMessage(
+        source_id="msg-3",
+        subject="Denný výpis",
+        sender="VÚB <nonstopbanking@vub.sk>",
+        received_at=datetime(2026, 4, 27, 1, 9, 3),
+        attachments=[],
+    )
+    attachment = Attachment(
+        filename="export_SK2902000000003936478451_26-04-2026-26-04-2026.XML",
+        content_type="application/xml",
+        content=b"<?xml version=\"1.0\"?><Document />",
+        size=36,
+    )
+    rules_file = Path(__file__).resolve().parents[1] / "rules.yaml"
+    rules, _ = load_rules(
+        rules_file,
+        variables={
+            "MAILDROP_SENDER_DEILMANN": "deilmann.sro@gmail.com",
+            "MAILDROP_SENDER_VUB": "nonstopbanking@vub.sk",
+            "MAILDROP_SENDER_FORWARDER": "rednaxela1813@gmail.com",
+        },
+    )
+
+    matched = match_rule(message, attachment, rules)
+
+    assert matched is not None
+    assert matched.name == "vub_bank_xml_exports"
+
+
+def test_load_rules_resolves_variables(tmp_path: Path) -> None:
+    rules_file = tmp_path / "rules.yaml"
+    rules_file.write_text(
+        """
+rules:
+  - name: variable_sender_rule
+    priority: 10
+    enabled: true
+    sender_contains:
+      - "${SENDER_ADDRESS}"
+    subject_contains: []
+    filename_contains: []
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Documents/${DESTINATION_BUCKET}/{yyyy}/{mm}"
+
+fallback:
+  destination: "Mail/Unsorted/{yyyy}/{mm}"
+""".strip(),
+        encoding="utf-8",
+    )
+
+    rules, _ = load_rules(
+        rules_file,
+        variables={
+            "SENDER_ADDRESS": "sender@example.com",
+            "DESTINATION_BUCKET": "Invoices",
+        },
+    )
+
+    assert rules[0].sender_contains == ["sender@example.com"]
+    assert rules[0].destination == "Mail/Documents/Invoices/{yyyy}/{mm}"
 
 
 def test_render_destination_replaces_date_placeholders() -> None:
