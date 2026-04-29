@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 from maildrop.models import Attachment, FallbackRule, MailMessage, RoutingRule
+from maildrop.pdf_text import extract_pdf_text
 
 VARIABLE_PATTERN = re.compile(r"\$\{([A-Z0-9_]+)\}")
 
@@ -38,6 +39,10 @@ def load_rules(
             ),
             filename_contains=_resolve_string_list(
                 item.get("filename_contains", []),
+                substitution_variables,
+            ),
+            attachment_text_contains=_resolve_string_list(
+                item.get("attachment_text_contains", []),
                 substitution_variables,
             ),
             allowed_extensions=_resolve_string_list(
@@ -83,6 +88,7 @@ def match_rule(
     subject = message.subject.lower()
     filename = attachment.filename.lower()
     extension = Path(attachment.filename).suffix.lower()
+    attachment_text: str | None = None
 
     for rule in rules:
         if not rule.enabled:
@@ -100,6 +106,16 @@ def match_rule(
             if not any(fragment.lower() in filename for fragment in rule.filename_contains):
                 continue
 
+        if rule.attachment_text_contains:
+            if attachment_text is None:
+                attachment_text = _extract_attachment_text(attachment)
+
+            if not any(
+                fragment.lower() in attachment_text
+                for fragment in rule.attachment_text_contains
+            ):
+                continue
+
         if rule.allowed_extensions:
             normalized_extensions = [ext.lower() for ext in rule.allowed_extensions]
             if extension not in normalized_extensions:
@@ -108,6 +124,14 @@ def match_rule(
         return rule
 
     return None
+
+
+def _extract_attachment_text(attachment: Attachment) -> str:
+    extension = Path(attachment.filename).suffix.lower()
+    if extension != ".pdf":
+        return ""
+
+    return extract_pdf_text(attachment.content).lower()
 
 
 def render_destination(template: str, message: MailMessage) -> str:

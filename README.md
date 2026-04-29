@@ -156,6 +156,7 @@ enabled
 sender_contains
 subject_contains
 filename_contains
+attachment_text_contains (optional; currently extracts text from PDFs)
 allowed_extensions (optional)
 destination
 

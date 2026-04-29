@@ -30,6 +30,7 @@ class RoutingRule:
     sender_contains: list[str]
     subject_contains: list[str]
     filename_contains: list[str]
+    attachment_text_contains: list[str]
     allowed_extensions: list[str]
     destination: str
 

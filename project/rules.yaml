@@ -92,5 +92,40 @@ rules:
       - ".pdf"
     destination: "Mail/Bills/Forwarded/{yyyy}/{mm}"
 
+  - name: spp_energy_contracts
+    priority: 70
+    enabled: true
+    sender_contains: []
+    subject_contains: []
+    filename_contains:
+      - "spp_"
+    attachment_text_contains:
+      - "Slovenský plynárenský priemysel"
+      - "Slovensky plynarensky priemysel"
+      - "Slovenskýplynárenskýpriemysel"
+      - "Zmluva o združenej dodávke elektriny"
+      - "Zmluva o zdruzenej dodavke elektriny"
+      - "Zmluvaozdruženejdodávkeelektriny"
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Documents/SPP/{yyyy}/{mm}"
+
+  - name: government_business_registry_documents
+    priority: 80
+    enabled: true
+    sender_contains: []
+    subject_contains: []
+    filename_contains:
+      - "01_dok_"
+    attachment_text_contains:
+      - "Okresný úrad Banská Bystrica"
+      - "Okresny urad Banska Bystrica"
+      - "odbor živnostenského podnikania"
+      - "o živnostenskom oprávnení"
+      - "živnostenského registra"
+    allowed_extensions:
+      - ".pdf"
+    destination: "Mail/Documents/Government/{yyyy}/{mm}"
+
 fallback:
   destination: "Mail/Unsorted/{yyyy}/{mm}"

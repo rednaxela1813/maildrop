@@ -30,6 +30,7 @@ def test_match_rule_returns_matching_rule() -> None:
             sender_contains=["deilmann.sro@gmail.com"],
             subject_contains=["dodaci list"],
             filename_contains=["inv_"],
+            attachment_text_contains=[],
             allowed_extensions=[".csv"],
             destination="Mail/Documents/Metro/{yyyy}/{mm}",
         )
@@ -64,6 +65,7 @@ def test_match_rule_returns_none_when_nothing_matches() -> None:
             sender_contains=["deilmann.sro@gmail.com"],
             subject_contains=["pravidelný export z účtu"],
             filename_contains=["export_"],
+            attachment_text_contains=[],
             allowed_extensions=[".xml"],
             destination="Mail/Bank/Exports/{yyyy}/{mm}",
         )
@@ -102,6 +104,80 @@ def test_project_rules_match_vub_xml_exports_without_subject_dependency() -> Non
 
     assert matched is not None
     assert matched.name == "vub_bank_xml_exports"
+
+
+def test_match_rule_can_match_pdf_attachment_text(monkeypatch) -> None:
+    message = MailMessage(
+        source_id="msg-4",
+        subject="Document",
+        sender="someone@example.com",
+        received_at=datetime(2026, 4, 29, 11, 30, 0),
+        attachments=[],
+    )
+    attachment = Attachment(
+        filename="01_dok_5146203610013700.pdf",
+        content_type="application/pdf",
+        content=b"pdf-data",
+        size=8,
+    )
+    rules = [
+        RoutingRule(
+            name="government_business_registry_documents",
+            priority=10,
+            enabled=True,
+            sender_contains=[],
+            subject_contains=[],
+            filename_contains=["01_dok_"],
+            attachment_text_contains=["Okresny urad Banska Bystrica"],
+            allowed_extensions=[".pdf"],
+            destination="Mail/Documents/Government/{yyyy}/{mm}",
+        )
+    ]
+
+    monkeypatch.setattr(
+        "maildrop.rules.extract_pdf_text",
+        lambda content: "Okresny urad Banska Bystrica",
+    )
+
+    matched = match_rule(message, attachment, rules)
+
+    assert matched is not None
+    assert matched.name == "government_business_registry_documents"
+
+
+def test_project_rules_match_spp_pdf_by_filename_and_text(monkeypatch) -> None:
+    message = MailMessage(
+        source_id="msg-5",
+        subject="Zmluva",
+        sender="no-reply@example.com",
+        received_at=datetime(2026, 4, 29, 12, 30, 0),
+        attachments=[],
+    )
+    attachment = Attachment(
+        filename="SPP_14449363000001_5151255244.pdf",
+        content_type="application/pdf",
+        content=b"pdf-data",
+        size=8,
+    )
+    rules_file = Path(__file__).resolve().parents[1] / "rules.yaml"
+    rules, _ = load_rules(
+        rules_file,
+        variables={
+            "MAILDROP_SENDER_DEILMANN": "deilmann.sro@gmail.com",
+            "MAILDROP_SENDER_VUB": "nonstopbanking@vub.sk",
+            "MAILDROP_SENDER_FORWARDER": "rednaxela1813@gmail.com",
+        },
+    )
+
+    monkeypatch.setattr(
+        "maildrop.rules.extract_pdf_text",
+        lambda content: "Slovensky plynarensky priemysel",
+    )
+
+    matched = match_rule(message, attachment, rules)
+
+    assert matched is not None
+    assert matched.name == "spp_energy_contracts"
 
 
 def test_load_rules_resolves_variables(tmp_path: Path) -> None:
